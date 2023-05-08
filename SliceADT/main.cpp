@@ -9,11 +9,17 @@ int main()
 {
 	slice_int s(3);
 
-	s.append(2);
-	s.append(4);
-	s.append(5);
+	s.append(3);
+	s.append(9);
+	s.append(1);
 	s.append(7);
 
+	std::cout << s.max() << std::endl;
+	std::cout << s.min() << std::endl;
+
+	s.display();
+	
+	
 
 	//debug info
 	std::cout << std::endl;

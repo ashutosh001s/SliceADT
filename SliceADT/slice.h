@@ -45,6 +45,7 @@ private:
 
 	//helper methods
 	bool is_index_valid(int index) const;
+	bool is_index_between_length(int index) const;
 	int resize(int size);
 	void copy(Type* to);
 	void swap(Type& x, Type& y);
@@ -75,16 +76,12 @@ public:
 	 */
 	int search(const Type x, const search_type s_type = search_type::linear_search, const search_mode s_mode = search_mode::transposition );
 
+	Type get(const int index) noexcept(false);
+	bool set(const int index, const Type x);
+	Type max();
+	Type min();
 
 	/**
-	 *copy constructor
-	 *
-	 *
-	 *
-	 *get(index)
-	 *set(index, x)
-	 *max()
-	 *min()
 	 *reverse()
 	 *shift()
 	 *rotate()
@@ -101,6 +98,16 @@ bool slice<Type>::is_index_valid(int index) const
 		return false;
 	}
 	return true;
+}
+
+template <typename Type>
+bool slice<Type>::is_index_between_length(const int index) const
+{
+	if (is_index_valid(index) && index <= m_len_)
+	{
+		return true;
+	}
+	return false;
 }
 
 template <typename Type>
@@ -247,7 +254,7 @@ void slice<Type>::print()
 template<typename Type>
 void slice<Type>::insert(int index, Type x)
 {
-	if (is_index_valid(index) && index <= m_len_)
+	if (is_index_between_length(index))
 	{
 		if (m_len_ == m_size_)
 		{
@@ -275,7 +282,7 @@ void slice<Type>::insert(int index, Type x)
 template <typename Type>
 void slice<Type>::remove(int index)
 {
-	if (is_index_valid(index) && index <= m_len_)
+	if (is_index_between_length(index))
 	{
 		for (int i = index; i < m_len_-1; i++)
 		{
@@ -337,6 +344,62 @@ int slice<Type>::search(const Type x,const search_type s_type, const search_mode
 		return -1;
 	}
 	return -2;
+}
+
+template <typename Type>
+Type slice<Type>::get(const int index) noexcept(false)
+{
+	try
+	{
+		if (is_index_between_length(index))
+			return m_arr_[index];
+		
+		throw std::out_of_range("Index out of range");
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << e.what();
+	}
+	return Type{};
+}
+
+template <typename Type>
+bool slice<Type>::set(const int index, const Type x)
+{
+	if (is_index_between_length(index))
+	{
+		m_arr_[index] = x;
+		return m_arr_[index] == x;
+	}
+	return false;
+}
+
+template <typename Type>
+Type slice<Type>::max()
+{
+	Type max = m_arr_[0];
+	for	(int i = 1; i < m_len_; i++)
+	{
+		if (m_arr_[i] > max)
+		{
+			max = m_arr_[i];
+		}
+	}
+	return max;
+}
+
+template <typename Type>
+Type slice<Type>::min()
+{
+	Type min = m_arr_[0];
+	for(int i = 1; i < m_len_; i++)
+	{
+		if (m_arr_[i] < min)
+		{
+			min = m_arr_[i];
+		}
+	}
+	return min;
 }
 
 
