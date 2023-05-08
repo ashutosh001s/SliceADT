@@ -11,6 +11,20 @@ enum array_status
 	null
 };
 
+enum search_type
+{
+	linear_search,
+	binary_search,
+	
+};
+
+enum search_mode
+{
+	transposition,
+	move_to_head,
+	none
+};
+
 struct debug_info
 {
 	int len;
@@ -33,12 +47,14 @@ private:
 	bool is_index_valid(int index) const;
 	int resize(int size);
 	void copy(Type* to);
+	void swap(Type& x, Type& y);
 
 public:
 	//constructor
 	slice(int size);
 	slice(std::initializer_list<Type> args);
 	slice(slice<Type>& s);
+	static int ceil(const double x);
 
 	//PUBLIC helper
 	debug_info get_debug_info() const;
@@ -49,12 +65,22 @@ public:
 	void print();
 	void insert(int index,Type x);
 	void remove(int index);
+	
+	/**
+	 * \brief search the element in slice, and returns index if found else -1
+	 * \param x element to search
+	 * \param s_type use binary search if slice is sorted
+	 * \param s_mode only works with linear search, transposition is recommended search mode, change it to move_to_head if a elements is repeatedly needed, if you don't want to change the position of elements in slice switch to search_mode::none
+	 * \return returns index if element found , -1 if not found and -2 if something went wrong
+	 */
+	int search(const Type x, const search_type s_type = search_type::linear_search, const search_mode s_mode = search_mode::transposition );
+
 
 	/**
 	 *copy constructor
 	 *
 	 *
-	 *search(x)
+	 *
 	 *get(index)
 	 *set(index, x)
 	 *max()
@@ -98,6 +124,24 @@ void slice<Type>::copy(Type* to)
 	{
 		to[i] = m_arr_[i];
 	}
+}
+
+template <typename Type>
+void slice<Type>::swap(Type& x, Type& y)
+{
+	Type temp = x;
+	x = y;
+	y = temp;
+}
+
+template <typename Type>
+int slice<Type>::ceil(const double x)
+{
+	const int int_part = static_cast<int>(x);
+	const double fraction_part = x - int_part;
+
+	return fraction_part > 0 ? int_part + 1 :int_part; 
+	
 }
 
 
@@ -240,6 +284,61 @@ void slice<Type>::remove(int index)
 		m_len_--; 
 	}
 }
+
+template <typename Type>
+int slice<Type>::search(const Type x,const search_type s_type, const search_mode s_mode)
+{
+	if (s_type == linear_search)
+	{
+		for(int i = 0; i < m_len_; i++)
+		{
+			if (m_arr_[i]==x)
+			{
+				if (s_mode!=search_mode::none)
+				{
+					if (s_mode == transposition && i > 0)
+					{
+						swap(m_arr_[i], m_arr_[i - 1]);
+					}
+					else
+					{
+						swap(m_arr_[i], m_arr_[0]);
+					}
+				}
+				return i;
+			}
+		}
+		return -1;
+	}
+		
+	if (s_type==binary_search)
+	{
+		 int begin = 0, end = m_len_-1, mid = ceil((begin + end) / 2.0);
+		 while(begin <= end)
+		 {
+			 if (m_arr_[mid]==x)
+			 {
+				 return mid;
+			 }
+
+		 	 if (x < m_arr_[mid])
+			 {
+				 end = mid - 1;
+				 mid = ceil((begin + end) / 2.0);
+			 	continue;
+			 }
+
+		 	 if (x > m_arr_[mid])
+			 {
+				 begin = mid + 1;
+				 mid = ceil((begin + end) / 2.0);
+			 }
+		 }
+		return -1;
+	}
+	return -2;
+}
+
 
 template <typename Type>
 debug_info slice<Type>::get_debug_info() const
