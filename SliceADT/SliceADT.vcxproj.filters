@@ -23,5 +23,8 @@
     <ClInclude Include="slice.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="dstypes.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
