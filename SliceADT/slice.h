@@ -4,11 +4,10 @@
 
 #define DEFAULT_ARRAY_SIZE 2  // NOLINT(modernize-macro-to-enum)
 
+
+
 namespace ds
 {
-
-
-
 	enum array_status
 	{
 		uninitialized,
@@ -36,6 +35,14 @@ namespace ds
 		int size;
 	};
 
+	struct SearchResult
+	{
+		const bool status;
+		const int index;
+		const int element;
+		const std::string error;
+	};
+
 	template <typename Type>
 	class slice
 	{
@@ -44,6 +51,7 @@ namespace ds
 		Type* m_arr_;
 		int m_len_;
 		int m_size_;
+		bool m_b_debug_ = false;
 
 		//helper properties
 		array_status m_status_ = array_status::null;
@@ -57,7 +65,7 @@ namespace ds
 
 	public:
 		//constructor
-		slice(int size);
+		slice(int size = 0,const bool b_debug = false);
 		slice(std::initializer_list<Type> args);
 		slice(slice<Type>& s);
 		~slice();
@@ -78,9 +86,10 @@ namespace ds
 		 * \param x element to search
 		 * \param s_type use binary search if slice is sorted
 		 * \param s_mode only works with linear search, transposition is recommended search mode, change it to move_to_head if a elements is repeatedly needed, if you don't want to change the position of elements in slice switch to search_mode::none
+		 * \param b_sort Allow sorting ,if not already sorted
 		 * \return returns index if element found , -1 if not found and -2 if something went wrong
 		 */
-		int search(const Type x, const search_type s_type = search_type::linear_search, const search_mode s_mode = search_mode::transposition);
+		SearchResult search(const Type x, const search_type s_type = search_type::linear_search, const search_mode s_mode = search_mode::transposition, const bool b_sort = false);
 
 		Type get(const int index) noexcept(false);
 		bool set(const Type x, int index = 0);
@@ -89,7 +98,9 @@ namespace ds
 		void reverse();
 		bool is_sorted();
 		void sudo_sort();
+		void sort();
 
+		void show_debug_info();
 		/**
 		 *shift	()
 		 *rotate()
@@ -121,7 +132,11 @@ namespace ds
 	template <typename Type>
 	int slice<Type>::resize(int size)
 	{
-		std::cout << "resizing, old size : " << m_size_ << " new size : " << size << std::endl;
+		if (m_b_debug_)
+		{
+			std::cout << "resizing, old size : " << m_size_ << " new size : " << size << std::endl;
+		}
+
 		Type* temp = new Type[size];
 		copy(temp);
 		delete[]m_arr_;
@@ -153,7 +168,7 @@ namespace ds
 	slice<Type>::~slice()
 	{
 		delete[]m_arr_;
-		delete this;
+		
 	}
 
 	template <typename Type>
@@ -168,7 +183,8 @@ namespace ds
 
 
 	template <typename Type>
-	slice<Type>::slice(int size)
+	slice<Type>::slice(const int size,const bool b_debug)
+		: m_b_debug_(b_debug)
 	{
 		if (m_status_ != array_status::null)
 		{
@@ -211,6 +227,7 @@ namespace ds
 
 		m_len_ = s.m_len_;
 		m_status_ = initialized;
+		
 	}
 
 	template <typename Type>
@@ -308,7 +325,7 @@ namespace ds
 	}
 
 	template <typename Type>
-	int slice<Type>::search(const Type x, const search_type s_type, const search_mode s_mode)
+	SearchResult slice<Type>::search(const Type x, const search_type s_type, const search_mode s_mode, const bool b_sort)
 	{
 		if (s_type == linear_search)
 		{
@@ -327,14 +344,24 @@ namespace ds
 							swap(m_arr_[i], m_arr_[0]);
 						}
 					}
-					return i;
+					return {true, i, x, "none"};
 				}
 			}
-			return -1;
+			return { false, -1, x, "Element not found" };
 		}
 
 		if (s_type == binary_search)
 		{
+			if (!is_sorted() && b_sort == false)
+			{
+				return { false, -1, x, "Cant perform binary search , Array is not sorted" };
+			}
+
+			if (b_sort)
+			{
+				sort();
+			}
+
 			int begin = 0, end = m_len_ - 1;
 			while (begin <= end)
 			{
@@ -342,7 +369,7 @@ namespace ds
 				int mid = ceil((begin + end) / 2.0);
 				if (m_arr_[mid] == x)
 				{
-					return mid;
+					return { true, mid, x, "none" };
 				}
 
 				if (x < m_arr_[mid])
@@ -356,9 +383,9 @@ namespace ds
 					begin = mid + 1;
 				}
 			}
-			return -1;
+			return { false, -1, x, "Element not found" };
 		}
-		return -2;
+		return { false, -2, x, "Unknown Error Occoured" };
 	}
 
 	template <typename Type>
@@ -484,6 +511,34 @@ namespace ds
 
 			}
 		}
+	}
+
+	template <typename Type>
+	void slice<Type>::sort()
+	{
+		while (!is_sorted())
+		{
+			for (int i = 0; i < m_len_-1; i++)
+			{
+				if (m_arr_[i] > m_arr_[i + 1])
+				{
+					swap(m_arr_[i], m_arr_[i + 1]);
+
+				}
+			}
+		}
+	}
+
+	template <typename Type>
+	void slice<Type>::show_debug_info()
+	{
+		std::cout << std::endl;
+		this->display();
+		std::cout << std::endl;
+
+		const debug_info debug = this->get_debug_info();
+		std::cout << "len : " << debug.len << std::endl;
+		std::cout << "size : " << debug.size << std::endl;
 	}
 
 

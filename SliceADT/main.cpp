@@ -1,12 +1,10 @@
 #include "dstypes.h"
 #include "string"
+#include "cstdio"
 
 int main()
 {
-	ds::slice_int s(20);
-
-	
-
+	ds::slice_int s(0);
 
 	//{2, 3, -4, 5, 6, -3, 19, -7, -20,7};
 
@@ -22,18 +20,17 @@ int main()
 	s.append(7);
 	s.append(0);
 
-	s.sudo_sort();
-	//const std::string msg = s.is_sorted() == true ? "True" : "False";
-	//std::cout << msg;
+	const ds::SearchResult& search_result = s.search(7, ds::binary_search, ds::none, true);
+	if (search_result.status)
+	{
+		printf("Element %u found at index : %u\n", search_result.element, search_result.index);
+	}
+	else
+	{
+		printf("%s\n", search_result.error.c_str());
+	}
 
-	s.display();
-
-	//debug info
-	std::cout << std::endl;
-	std::cout<< "len : " << s.get_debug_info().len << std::endl;
-	std::cout << "size : " << s.get_debug_info().size << std::endl;
-
-	std::cin.get();
+	s.show_debug_info();
 
 	return 0;
 }
