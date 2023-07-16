@@ -33,6 +33,8 @@ namespace ds
 	{
 		int len;
 		int size;
+		bool debug_mode;
+		array_status status;
 	};
 
 	struct SearchResult
@@ -41,6 +43,17 @@ namespace ds
 		const int index;
 		const int element;
 		const std::string error;
+		void format() const
+		{
+			if (status)
+			{
+				printf("Element %u found at index : %u\n", element, index);
+			}
+			else
+			{
+				printf("%s\n", error.c_str());
+			}
+		}
 	};
 
 	template <typename Type>
@@ -62,6 +75,7 @@ namespace ds
 		int resize(int size);
 		void copy(Type* to);
 		void swap(Type& x, Type& y) noexcept(true);
+		void show_debug_info();
 
 	public:
 		//constructor
@@ -73,10 +87,12 @@ namespace ds
 
 		//PUBLIC helper
 		debug_info get_debug_info() const;
+		inline void set_debug_mode(const bool b_debug) { m_b_debug_ = b_debug; }
 
 		//public methods
 		void append(Type x);
-		void display();
+		void display(const bool b_linear = true);
+		static void display(const Type x);
 		void print();
 		void insert(int index, Type x);
 		void remove(int index);
@@ -100,12 +116,16 @@ namespace ds
 		void sudo_sort();
 		void sort();
 
-		void show_debug_info();
+		
 		/**
 		 *shift	()
 		 *rotate()
 		 ***/
 
+		Type & operator[](int index)
+		{
+			return m_arr_[index];
+		}
 
 	};
 
@@ -167,7 +187,16 @@ namespace ds
 	template <typename Type>
 	slice<Type>::~slice()
 	{
+		if (m_b_debug_)
+		{
+			show_debug_info();
+			std::cout << "Destroying..." << std::endl;
+		}
+
 		delete[]m_arr_;
+
+		if (m_b_debug_)
+			std::cout << "Destroyed!" << std::endl;
 		
 	}
 
@@ -184,26 +213,25 @@ namespace ds
 
 	template <typename Type>
 	slice<Type>::slice(const int size,const bool b_debug)
-		: m_b_debug_(b_debug)
+		: m_len_(0),  m_size_(size)
 	{
 		if (m_status_ != array_status::null)
 		{
 			return;
 		}
-		m_arr_ = new Type[size];
-		m_size_ = size;
-		m_len_ = 0;
+		m_arr_ = new Type[m_size_];
 		m_status_ = array_status::uninitialized;
 	}
 
 	template <typename Type>
 	slice<Type>::slice(std::initializer_list<Type> args)
+		: m_len_(0)
 	{
 		if (m_status_ != array_status::null)
 		{
 			return;
 		}
-		m_size_ = args.size();
+		m_size_ = static_cast<int>(args.size());
 		m_arr_ = new Type[m_size_];
 
 		for (auto arg : args)
@@ -229,6 +257,7 @@ namespace ds
 		m_status_ = initialized;
 		
 	}
+
 
 	template <typename Type>
 	void slice<Type>::append(Type x)
@@ -256,13 +285,36 @@ namespace ds
 	}
 
 	template <typename Type>
-	void slice<Type>::display()
+	void slice<Type>::display(const bool b_linear)
 	{
-		for (int i = 0; i < m_len_; i++)
+
+		if (b_linear)
 		{
-			std::cout << m_arr_[i] << "\t";
+			for (int i = 0; i < m_len_; i++)
+			{
+
+				std::cout << m_arr_[i] << "\t";
+			}
+
+			std::cout << std::endl;
 		}
-		std::cout << std::endl;
+		else
+		{
+			std::cout << "index" << " | " << "element" << std::endl;
+			std::cout << "---------------" << std::endl;
+			for (int i = 0; i < m_len_; i++)
+			{
+
+				std::cout << "[ " << i << " ]" << " | " << m_arr_[i] << std::endl;
+			}
+		}
+		
+	}
+
+	template <typename Type>
+	void slice<Type>::display(const Type x)
+	{
+		std::cout << x << std::endl;
 	}
 
 	template <typename Type>
@@ -533,23 +585,23 @@ namespace ds
 	void slice<Type>::show_debug_info()
 	{
 		std::cout << std::endl;
-		this->display();
+		this->display(!m_b_debug_);
 		std::cout << std::endl;
 
 		const debug_info debug = this->get_debug_info();
 		std::cout << "len : " << debug.len << std::endl;
 		std::cout << "size : " << debug.size << std::endl;
+		std::cout << "debug mode : " << (debug.debug_mode == true ? "On" : "Off") << std::endl;
+		std::cout << "status : " << (debug.status == uninitialized ? "Uninitialized" : debug.status == initialized ? "Initialized" : "Null") << std::endl;
 	}
 
 
 	template <typename Type>
 	debug_info slice<Type>::get_debug_info() const
 	{
-		debug_info d = {};
-		d.len = m_len_;
-		d.size = m_size_;
+	
 
-		return d;
+		return {m_len_, m_size_, m_b_debug_, m_status_};
 	}
 
 }
